@@ -2,7 +2,7 @@ import os
 import digikey
 import configparser
 
-from Digikey import get_part_from_part_number
+from .Digikey import get_part_from_part_number
 from pathlib import Path
 from digikey.v3.productinformation import KeywordSearchRequest
 
@@ -21,4 +21,11 @@ partnum = input("Enter a digikey partnum > ")
 
 dkpart = get_part_from_part_number(partnum)
 
+
+partname = input("Enter Part Name > ")
+dkpart.set_part_name(partname)
+
 print(dkpart)
+
+
+print(dkpart.parameters)
