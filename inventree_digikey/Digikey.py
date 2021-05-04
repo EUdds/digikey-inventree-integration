@@ -3,13 +3,14 @@ from digikey import product_details
 
 def get_part_from_part_number(partnum: str):
     raw = product_details(partnum)
+    print(raw)
     part = DigiPart(raw)
     part.injest_api()
     return part
 
 class DigiPart:
     def __init__(self, api_value):
-        self.part = None
+        self.name = None
         self.supplier = "Digikey"
         self.digi_part_num = None
         self.mfg_part_num = None
@@ -19,6 +20,8 @@ class DigiPart:
         self.price_breaks = []
         self.raw_value = api_value
         self.parameters = []
+        self.picture = None
+        self.thumbnail = None
 
 
     def injest_api(self):
@@ -34,4 +37,4 @@ class DigiPart:
 
 
     def set_part_name(self, name: str):
-        self.part = name
+        self.name = name
