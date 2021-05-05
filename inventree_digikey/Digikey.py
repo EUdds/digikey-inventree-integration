@@ -1,5 +1,7 @@
 from digikey import product_details
 
+from .ImageManager import ImageManager
+
 
 def get_part_from_part_number(partnum: str):
     raw = product_details(partnum)
@@ -35,6 +37,15 @@ class DigiPart:
             cleaned_param = (raw_param.parameter, raw_param.value)
             self.parameters.append(cleaned_param)
 
+        self._extract_picture()
+
 
     def set_part_name(self, name: str):
         self.name = name
+
+    def _extract_picture(self):
+        for media in self.raw_value.media_links:
+            print(media.media_type)
+            if "Product Photos" in media.media_type:
+                self.picture = ImageManager.get_image(media.url)
+

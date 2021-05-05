@@ -31,7 +31,6 @@ def add_digikey_part(dkpart: DigiPart):
     print("Getting Manufacturer")
     mfg = find_manufacturer(dkpart)
     print("Found %s" %mfg.name)
-    time.sleep(5)
     SupplierPart.create(API, {
             "part":base_pk,
             "supplier": dk.pk,
@@ -61,6 +60,7 @@ def create_inventree_part(dkpart: DigiPart):
         'purchaseable': 1
         })
     print("Created part with pk %d" % part.pk)
+    upload_picture(dkpart, part)
     return part
 
 
@@ -96,3 +96,7 @@ def create_manufacturer(name: str, is_supplier: bool=False):
         'description': name
         })
     return mfg
+
+def upload_picture(dkpart: DigiPart, invPart):
+    if dkpart.picture is not None:
+        invPart.upload_image(dkpart.picture)
