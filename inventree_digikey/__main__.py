@@ -22,9 +22,4 @@ partnum = input("Enter a digikey partnum > ")
 dkpart = get_part_from_part_number(partnum)
 print(dkpart)
 
-partname = input("Enter Part Name > ")
-dkpart.set_part_name(partname)
-
-print(dkpart)
-
 add_digikey_part(dkpart)

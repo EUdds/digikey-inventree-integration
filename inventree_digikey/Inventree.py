@@ -9,6 +9,7 @@ from inventree.base import Parameter, ParameterTemplate
 from pathlib import Path
 
 from .Digikey import DigiPart
+from .ImageManager import ImageManager
 
 config = configparser.ConfigParser()
 config_path = Path(__file__).resolve().parent / "config.ini"
@@ -22,15 +23,10 @@ API = InvenTreeAPI(API_URL, username=USERNAME, password=PASSWORD)
 
 
 def add_digikey_part(dkpart: DigiPart):
-    print("Getting DK")
     dk = get_digikey_supplier()
-    print("Creating Base Part")
     inv_part = create_inventree_part(dkpart)
-    print("Part has pk of %d" % inv_part.pk)
     base_pk = int(inv_part.pk)
-    print("Getting Manufacturer")
     mfg = find_manufacturer(dkpart)
-    print("Found %s" %mfg.name)
     SupplierPart.create(API, {
             "part":base_pk,
             "supplier": dk.pk,
@@ -44,7 +40,6 @@ def add_digikey_part(dkpart: DigiPart):
 
 def get_digikey_supplier():
     dk = Company.list(API, name="Digikey")
-    print(dk)
     return dk[0]
 
 def create_inventree_part(dkpart: DigiPart):
@@ -59,7 +54,6 @@ def create_inventree_part(dkpart: DigiPart):
         'component': True,
         'purchaseable': 1
         })
-    print("Created part with pk %d" % part.pk)
     upload_picture(dkpart, part)
     return part
 
@@ -99,4 +93,6 @@ def create_manufacturer(name: str, is_supplier: bool=False):
 
 def upload_picture(dkpart: DigiPart, invPart):
     if dkpart.picture is not None:
-        invPart.upload_image(dkpart.picture)
+        img_file = ImageManager.get_image(dkpart.picture)
+        invPart.upload_image(img_file)
+        ImageManager.clean_cache()
