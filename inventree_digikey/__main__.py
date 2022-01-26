@@ -1,10 +1,8 @@
 import os
-import digikey
 import configparser
 
 from .Digikey import get_part_from_part_number
 from pathlib import Path
-from digikey.v3.productinformation import KeywordSearchRequest
 from .Inventree import add_digikey_part
 
 config = configparser.ConfigParser()

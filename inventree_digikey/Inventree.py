@@ -25,6 +25,8 @@ API = InvenTreeAPI(API_URL, username=USERNAME, password=PASSWORD)
 def add_digikey_part(dkpart: DigiPart):
     dk = get_digikey_supplier()
     inv_part = create_inventree_part(dkpart)
+    if inv_part == -1:
+        return
     base_pk = int(inv_part.pk)
     mfg = find_manufacturer(dkpart)
     SupplierPart.create(API, {
@@ -45,6 +47,11 @@ def get_digikey_supplier():
 def create_inventree_part(dkpart: DigiPart):
     category = find_category()
     possible_parts = Part.list(API, name=dkpart.name, description=dkpart.description)
+    if len(possible_parts) > 0:
+        part_names = [p.name.lower() for p in possible_parts]
+        if dkpart.name.lower() in part_names:
+            print("Part already exists")
+            return -1
     part = Part.create(API, {
         'name': dkpart.name,
         'description': dkpart.description,
