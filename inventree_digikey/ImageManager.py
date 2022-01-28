@@ -42,7 +42,7 @@ class ImageManager:
                 f.unlink()
 
     def _filename_generator(size=6) -> str:
-        return "".join(random.choice(string.ascii_lowercase + string.digits) for _ in range(size))
+        return "".join(random.choice(string.ascii_lowercase + string.digits) for _ in range(size)) + ".jpg"
 
     @classmethod
     def _download_image(cls, url:str) -> str:

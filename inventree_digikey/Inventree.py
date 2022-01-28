@@ -3,7 +3,7 @@ import time
 
 
 from inventree.api import InvenTreeAPI
-from inventree.company import SupplierPart, Company
+from inventree.company import SupplierPart, Company, ManufacturerPart
 from inventree.part import Part, PartCategory
 from inventree.base import Parameter, ParameterTemplate
 from pathlib import Path
@@ -29,20 +29,37 @@ def add_digikey_part(dkpart: DigiPart):
         return
     base_pk = int(inv_part.pk)
     mfg = find_manufacturer(dkpart)
+
+    ManufacturerPart.create(API, {
+        'part': base_pk,
+        'supplier': dk.pk,
+        'MPN': dkpart.mfg_part_num,
+        'manufacturer': mfg.pk
+        })
+
     SupplierPart.create(API, {
             "part":base_pk,
             "supplier": dk.pk,
             "SKU": dkpart.digi_part_num,
             "manufacturer": mfg.pk,
             "description": dkpart.description,
-            "MPN": dkpart.mfg_part_num,
             "link": dkpart.link
             })
+    
     return
+
 
 def get_digikey_supplier():
     dk = Company.list(API, name="Digikey")
-    return dk[0]
+    if len(dk) == 0:
+        dk = Company.create(API, {
+            'name': 'Digikey',
+            'is_supplier': True,
+            'description': 'Electronics Supply Store'
+        })
+        return dk
+    else:
+        return dk[0]
 
 def create_inventree_part(dkpart: DigiPart):
     category = find_category()
@@ -101,5 +118,5 @@ def create_manufacturer(name: str, is_supplier: bool=False):
 def upload_picture(dkpart: DigiPart, invPart):
     if dkpart.picture is not None:
         img_file = ImageManager.get_image(dkpart.picture)
-        invPart.upload_image(img_file)
+        invPart.uploadImage(img_file)
         ImageManager.clean_cache()
