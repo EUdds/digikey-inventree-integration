@@ -4,8 +4,7 @@ import time
 
 from inventree.api import InvenTreeAPI
 from inventree.company import SupplierPart, Company, ManufacturerPart
-from inventree.part import Part, PartCategory
-from inventree.base import Parameter, ParameterTemplate
+from inventree.part import Part, PartCategory, Parameter, ParameterTemplate
 from pathlib import Path
 
 from .Digikey import DigiPart
