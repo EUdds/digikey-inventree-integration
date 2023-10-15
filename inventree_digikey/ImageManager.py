@@ -62,5 +62,5 @@ class ImageManager:
                     break
                 handler.write(block)
 
-        return filepath
+        return str(filepath)
 
