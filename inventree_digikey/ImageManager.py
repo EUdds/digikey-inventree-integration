@@ -1,7 +1,8 @@
 import os
-import requests
 import random
 import string
+import http.client
+from urllib.parse import urlparse, quote
 
 from pathlib import Path
 
@@ -47,20 +48,44 @@ class ImageManager:
     @classmethod
     def _download_image(cls, url:str) -> str:
         print(f"Trying URL {url}")
-        res = requests.get(url, stream=True)
 
-        if not res.ok:
-            print(f"ERROR: Request code is {res.status_code}")
+        escaped_url = quote(url, safe=':/')
+
+        parsed_url = urlparse(escaped_url)
+
+        # Extract protocol, server host, and path
+        protocol = parsed_url.scheme
+        server_host = parsed_url.netloc
+        path = parsed_url.path
+
+        # Create an HTTP connection to the server based on the protocol
+        if protocol == 'http':
+            conn = http.client.HTTPConnection(server_host)
+        elif protocol == 'https':
+            conn = http.client.HTTPSConnection(server_host)
+        else:
+            print("Unsupported protocol:", protocol)
+            exit(1)
+
+        # Send an HTTP GET request with custom headers
+        conn.request('GET', path)
+
+        # Get the response
+        response = conn.getresponse()
+    
+        if not response.status == 200:
+            print(f"ERROR: Request code is {response.status}")
             return -1
 
         filename = cls._filename_generator()
 
         filepath = cls.cache_path / filename
         with open(filepath, 'wb') as handler:
-            for block in res.iter_content(1024):
-                if not block:
+            while True:
+                chunk = response.read(1024)
+                if not chunk:
                     break
-                handler.write(block)
+                handler.write(chunk)
 
         return str(filepath)
 
