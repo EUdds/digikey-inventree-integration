@@ -1,23 +1,28 @@
-import os
-import configparser
+from . import import_digikey_part, import_digikey_order
+import sys
+import argparse
 
-from .Digikey import get_part_from_part_number
-from pathlib import Path
-from .Inventree import add_digikey_part
+parser = argparse.ArgumentParser(description='Import Digikey part numbers into InvenTree')
 
-config = configparser.ConfigParser()
-config_path = Path(__file__).resolve().parent / 'config.ini'
-config.read(config_path)
+# Add an optional '-y' flag to bypass prompting
+parser.add_argument('-y', action='store_true', help='Bypass user prompts and assume "yes"')
+parser.add_argument('-o', action='store_true', help='Query and Order number and import it')
 
-os.environ['DIGIKEY_CLIENT_ID'] = config['DIGIKEY_API']['CLIENT_ID']
-os.environ['DIGIKEY_CLIENT_SECRET'] = config['DIGIKEY_API']['CLIENT_SECRET']
-os.environ['DIGIKEY_CLIENT_SANDBOX'] = 'False'
-os.environ['DIGIKEY_STORAGE_PATH'] = '.'
+# Add the 'part_number' argument as the last item on the command line
+parser.add_argument('part_number', type=str, help='Part number to import')
 
+args = parser.parse_args()
+if args.o:
+    if len(sys.argv) > 1:
+        ordernum = args.part_number
+    else:
+        ordernum = input("Enter a Digikey Order Number > ")
 
-partnum = input("Enter a digikey partnum > ")
+    import_digikey_order(ordernum)
+else:
+    if len(sys.argv) > 1:
+        partnum = args.part_number
+    else:
+        partnum = input("Enter a digikey Part Number > ")
 
-dkpart = get_part_from_part_number(partnum)
-print(dkpart)
-
-add_digikey_part(dkpart)
+    import_digikey_part(partnum, not args.y)
