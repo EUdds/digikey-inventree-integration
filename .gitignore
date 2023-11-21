@@ -130,4 +130,5 @@ dmypy.json
 
 token_storage.json
 *.pem
-tests/test_data/*.pkl
+
+!tests/test_data/test_config.ini

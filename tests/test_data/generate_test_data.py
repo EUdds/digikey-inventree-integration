@@ -1,7 +1,3 @@
-# DO NOT COMMIT RESPONSES FROM THE DIGIKEY API ONLINE
-
-# Use this to generate test data for the tests, use exact part numbers so that the tests will pass
-
 from digikey import product_details
 import pickle
 from pathlib import Path

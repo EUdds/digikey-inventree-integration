@@ -2,6 +2,7 @@ from pathlib import Path
 from configparser import ConfigParser
 import pytest
 import pickle
+import os
 
 TEST_DATA_PATH = Path(__file__).resolve().parent / "test_data"
 
@@ -19,7 +20,7 @@ def test_data():
     data_dict["test_image"] =  {
         "url":"https://postimg.cc/WF5g5BGP",
         "size": 11688,
-        "size_error": 0.1,
+        "size_error": 0.2, # Add some error margin for different download sizes
     }
 
     return data_dict
