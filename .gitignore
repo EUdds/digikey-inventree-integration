@@ -129,3 +129,6 @@ dmypy.json
 .pyre/
 
 token_storage.json
+*.pem
+
+!tests/test_data/test_config.ini

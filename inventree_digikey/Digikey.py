@@ -26,7 +26,7 @@ class DigiPart:
         self.thumbnail = None
 
 
-    def injest_api(self):
+    def injest_api(self, prompt=True):
         self.manufacturer = self.raw_value.manufacturer.value
         self.mfg_part_num = self.raw_value.manufacturer_part_number
         self.description = self.raw_value.product_description
@@ -36,8 +36,11 @@ class DigiPart:
         for raw_param in self.raw_value.parameters:
             cleaned_param = (raw_param.parameter, raw_param.value)
             self.parameters.append(cleaned_param)
-
-        self.prompt_part_name()
+        
+        if prompt:
+            self.prompt_part_name()
+        else:
+            self.set_part_name(self.raw_value.manufacturer_part_number)
 
 
     def set_part_name(self, name: str):
