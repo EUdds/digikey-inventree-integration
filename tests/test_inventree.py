@@ -25,6 +25,8 @@ def test_api(test_data, monkeypatch):
 def test_get_digikey_supplier_new_company(test_api, monkeypatch, test_supplier_data):
     monkeypatch.setattr(inventree.company.Company, 'list', lambda *args, **kwargs: [])
     monkeypatch.setattr(inventree.company.Company, 'create', mock_create_company)
+    monkeypatch.setattr(inventree.part.PartCategory, 'list', lambda *args, **kwargs: [inventree.part.PartCategory(test_api, data={"pk": 1, "name": "Resistors", "parent": None})])
+    monkeypatch.setattr(inventree.part.ParameterTemplate, 'list', lambda *args, **kwargs: [inventree.part.ParameterTemplate(test_api, data={"pk": 1, "name": "Resistance"}), inventree.part.ParameterTemplate(test_api, data={"pk": 2, "name": "HTSUS"})])
     dk = test_module.get_digikey_supplier()
     assert dk.pk == 1
     assert dk.name == "Digikey"
@@ -44,6 +46,7 @@ def test_create_inventree_part(monkeypatch, test_data, test_api):
     monkeypatch.setattr(inventree.part.Part, 'uploadImage', lambda *args, **kwargs: None)
     monkeypatch.setattr(inventree.part.Part, 'create', mock_create_part)
     monkeypatch.setattr(inventree.part.Part, 'list', lambda *args, **kwargs: [])
+    monkeypatch.setattr(inventree.part.Parameter, 'create', lambda *args, **kwargs: inventree.part.Parameter(test_api, data={"pk": 1}))
 
     inventree_part = test_module.create_inventree_part(test_data["test_dkpart"])
     assert inventree_part.pk == 1
@@ -88,6 +91,7 @@ def test_add_digikey_part(test_data, monkeypatch, test_api):
     monkeypatch.setattr('builtins.input', lambda *args, **kwargs: "0")
     monkeypatch.setattr(inventree.company.ManufacturerPart, 'create', lambda *args, **kwargs: None)
     monkeypatch.setattr(inventree.company.SupplierPart, 'create', lambda *args, **kwargs: None)
+    monkeypatch.setattr(inventree.part.Parameter, 'create', lambda *args, **kwargs: inventree.part.Parameter(test_api, data={"pk": 1}))
 
     test_module.add_digikey_part(test_data["test_dkpart"]) # Yeah, I should add some return value error checking type stuff here
 

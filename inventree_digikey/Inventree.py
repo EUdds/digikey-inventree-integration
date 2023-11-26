@@ -21,45 +21,46 @@ USERNAME = None
 PASSWORD = None
 API = None
 
+catagory_map = {}
+params_map = {}
+htsus_pk = None
+
 def load_config():
     config = configparser.ConfigParser()
     config.read(CONFIG_FILE_PATH)
     global API_URL, USERNAME, PASSWORD, API
+    global catagory_map, params_map, htsus_pk
 
     API_URL = config['INVENTREE_API']['URL']
     USERNAME = config['INVENTREE_API']['USER']
     PASSWORD = config['INVENTREE_API']['PASSWORD']
     API = InvenTreeAPI(API_URL, username=USERNAME, password=PASSWORD)
 
-catagory_map = {}
-params_map = {}
-htsus_pk = None
+    inventree_params = ParameterTemplate.list(API)
+    #for param in inventree_params:
+    #    print(f"{param.pk} : {param.name}")
 
-inventree_params = ParameterTemplate.list(API)
-#for param in inventree_params:
-#    print(f"{param.pk} : {param.name}")
+    for param in config['PARAMETERS']:
+        value = config['PARAMETERS'][param]
+        match_param = [p.pk for p in inventree_params if p.name == value]
+        if len(match_param) > 0:
+            #print(f"Found {value} in inventree with pk {match_param[0]}")
+            params_map[param] = match_param[0]
 
-for param in config['PARAMETERS']:
-    value = config['PARAMETERS'][param]
-    match_param = [p.pk for p in inventree_params if p.name == value]
-    if len(match_param) > 0:
-        #print(f"Found {value} in inventree with pk {match_param[0]}")
-        params_map[param] = match_param[0]
+    # If setting say to import HTSUS, we assume inventree has a HTSUS category
+    if config['SETTINGS'].getboolean('IMPORT_HTSUS'):
+        htsus_pk = [p.pk for p in inventree_params if p.name == "HTSUS"][0]
 
-# If setting say to import HTSUS, we assume inventree has a HTSUS category
-if config['SETTINGS'].getboolean('IMPORT_HTSUS'):
-    htsus_pk = [p.pk for p in inventree_params if p.name == "HTSUS"][0]
+    inventree_categories = PartCategory.list(API)
+    #for cat in inventree_categories:
+    #    print(f"{cat.pk} : {cat.name}")
 
-inventree_categories = PartCategory.list(API)
-#for cat in inventree_categories:
-#    print(f"{cat.pk} : {cat.name}")
-
-for cat in config['CATEGORIES']:
-    value = config['CATEGORIES'][cat]
-    match_cat = [c.pk for c in inventree_categories if c.name == value]
-    if len(match_cat) > 0:
-        #print(f"Found {value} in inventree with pk {match_cat[0]}")
-        catagory_map[cat] = match_cat[0]
+    for cat in config['CATEGORIES']:
+        value = config['CATEGORIES'][cat]
+        match_cat = [c.pk for c in inventree_categories if c.name == value]
+        if len(match_cat) > 0:
+            #print(f"Found {value} in inventree with pk {match_cat[0]}")
+            catagory_map[cat] = match_cat[0]
 
 
 def import_digikey_part(partnum: str, prompt=False):

@@ -17,8 +17,8 @@ os.environ['DIGIKEY_STORAGE_PATH'] = '.'
 def get_part_from_part_number(partnum: str, prompt=True):
     raw = product_details(partnum)
     print(raw)
-    part = DigiPart(raw, prompt)
-    part.injest_api()
+    part = DigiPart(raw)
+    part.injest_api(prompt)
     return part
 
 
@@ -30,7 +30,7 @@ def get_order_from_order_number(order_number: str):
 
 
 class DigiPart:
-    def __init__(self, api_value, prompt=True):
+    def __init__(self, api_value):
         self.name = None
         self.supplier = "Digikey"
         self.digi_part_num = None
@@ -45,7 +45,6 @@ class DigiPart:
         self.thumbnail = None
         self.htsus = None
         self.catagory = None
-        self.prompt = prompt
 
 
     def injest_api(self, prompt=True):
