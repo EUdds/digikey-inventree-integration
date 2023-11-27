@@ -43,9 +43,11 @@ def load_config():
     for param in config['PARAMETERS']:
         value = config['PARAMETERS'][param]
         match_param = [p.pk for p in inventree_params if p.name == value]
-        if len(match_param) > 0:
+        if len(match_param) == 1:
             #print(f"Found {value} in inventree with pk {match_param[0]}")
             params_map[param] = match_param[0]
+        elif len(match_param) > 1:
+            raise ValueError(f"Found more than one possible match for parameter {param}")
 
     # If setting say to import HTSUS, we assume inventree has a HTSUS category
     if config['SETTINGS'].getboolean('IMPORT_HTSUS'):
