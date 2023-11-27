@@ -22,19 +22,19 @@ def test_api(test_data, monkeypatch):
     return api
     # Cleanup here as necessary
 
-def test_get_digikey_supplier_new_company(test_api, monkeypatch, test_supplier_data):
+def test_get_digikey_supplier_new_company(test_api, monkeypatch, test_data):
     monkeypatch.setattr(inventree.company.Company, 'list', lambda *args, **kwargs: [])
     monkeypatch.setattr(inventree.company.Company, 'create', mock_create_company)
-    dk = test_module.get_digikey_supplier()
+    dk = test_module.get_digikey_supplier(test_data["config_reader"])
     assert dk.pk == 1
     assert dk.name == "Digikey"
     assert dk.is_supplier == True
     assert dk.description == "Electronics Supply Store"
 
 
-def test_get_digikey_supplier_existing_company(test_api, test_supplier_data, monkeypatch):
+def test_get_digikey_supplier_existing_company(test_api, test_supplier_data, monkeypatch, test_data):
     monkeypatch.setattr(inventree.company.Company, 'list', lambda *args, **kwargs: [inventree.company.Company(test_api, data=test_supplier_data)]) 
-    dk = test_module.get_digikey_supplier()
+    dk = test_module.get_digikey_supplier(test_data['config_reader'])
     assert dk.pk == 1
 
 
@@ -45,7 +45,7 @@ def test_create_inventree_part(monkeypatch, test_data, test_api):
     monkeypatch.setattr(inventree.part.Part, 'create', mock_create_part)
     monkeypatch.setattr(inventree.part.Part, 'list', lambda *args, **kwargs: [])
 
-    inventree_part = test_module.create_inventree_part(test_data["test_dkpart"])
+    inventree_part = test_module.create_inventree_part(test_data["test_dkpart"], test_data['config_reader'])
     assert inventree_part.pk == 1
     assert inventree_part.name == test_data["test_dkpart"].name
     assert inventree_part.description == test_data["test_dkpart"].description
@@ -57,14 +57,14 @@ def test_create_inventree_part_part_exists(test_data, monkeypatch, test_api):
     monkeypatch.setattr(inventree.part.Part, 'create', mock_create_part)
     monkeypatch.setattr(inventree.part.Part, 'list', lambda *args, **kwargs: [inventree.part.Part(test_api, data={"pk": 1, "name": test_data["test_dkpart"].name, "description": test_data["test_dkpart"].description})])
 
-    inventree_part = test_module.create_inventree_part(test_data["test_dkpart"])
+    inventree_part = test_module.create_inventree_part(test_data["test_dkpart"], test_data['config_reader'])
     assert inventree_part == -1
 
 
 def test_find_manufacturer(test_data, monkeypatch, test_api):
     monkeypatch.setattr(inventree.company.Company, 'list', lambda *args, **kwargs: [])
     monkeypatch.setattr(inventree.company.Company, 'create', mock_create_company)
-    test_manufacturer = test_module.find_manufacturer(test_data["test_dkpart"])
+    test_manufacturer = test_module.find_manufacturer(test_data["test_dkpart"], test_data['config_reader'])
     assert test_manufacturer.pk == 1
     assert test_manufacturer.name == test_data["test_dkpart"].manufacturer
     assert test_manufacturer.is_supplier == False
@@ -73,7 +73,7 @@ def test_find_manufacturer(test_data, monkeypatch, test_api):
 def test_find_manufacturer_manufactuer_exists(test_data, monkeypatch, test_api):
     monkeypatch.setattr(inventree.company.Company, 'list', lambda *args, **kwargs: [inventree.company.Company(test_api, data={"pk": 1, "name": test_data["test_dkpart"].manufacturer, "description": test_data["test_dkpart"].manufacturer, "is_supplier": False})])
     monkeypatch.setattr('builtins.input', lambda *args, **kwargs: "0")
-    test_manufacturer = test_module.find_manufacturer(test_data["test_dkpart"])
+    test_manufacturer = test_module.find_manufacturer(test_data["test_dkpart"], test_data['config_reader'])
     assert test_manufacturer.pk == 1
     assert test_manufacturer.name == "Texas Instruments"
     assert test_manufacturer.is_supplier == False
@@ -89,7 +89,7 @@ def test_add_digikey_part(test_data, monkeypatch, test_api):
     monkeypatch.setattr(inventree.company.ManufacturerPart, 'create', lambda *args, **kwargs: None)
     monkeypatch.setattr(inventree.company.SupplierPart, 'create', lambda *args, **kwargs: None)
 
-    test_module.add_digikey_part(test_data["test_dkpart"]) # Yeah, I should add some return value error checking type stuff here
+    test_module.add_digikey_part(test_data["test_dkpart"], test_data['config_reader']) # Yeah, I should add some return value error checking type stuff here
 
 
 

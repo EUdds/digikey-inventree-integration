@@ -1,14 +1,9 @@
-from digikey import product_details
+from digikey import status_salesorder_id
+import digikey # have to use digikey.product_details for monkeypatch testing
+import os
+from pathlib import Path
 
-from .ImageManager import ImageManager
-
-
-def get_part_from_part_number(partnum: str):
-    raw = product_details(partnum)
-    print(raw)
-    part = DigiPart(raw)
-    part.injest_api()
-    return part
+from .ConfigReader import ConfigReader
 
 class DigiPart:
     def __init__(self, api_value):
@@ -40,22 +35,18 @@ class DigiPart:
         if prompt:
             self.prompt_part_name()
         else:
-            self.set_part_name(self.raw_value.manufacturer_part_number)
-
-
-    def set_part_name(self, name: str):
-        self.name = name
+            self.name = self.raw_value.manufacturer_part_number
 
     def prompt_part_name(self):
         found_name = self.raw_value.manufacturer_part_number
         print(f"Found {found_name} - Would you like to use this name (y/n)")
         ans = input("> ")
         if ans == "y":
-            self.set_part_name(found_name)
+            self.name = found_name
         else:
             print("Type a new name")
             name = input("> ")
-            self.set_part_name(name)
+            self.name = name
 
 
     def _extract_picture(self):
@@ -63,4 +54,34 @@ class DigiPart:
             print(media.media_type)
             if "Product Photos" in media.media_type:
                 self.picture = "%s" % media.url
-
+    
+    @staticmethod
+    def _set_environment(config):
+        if config.digikey_client_id and config.digikey_client_secret and config.digikey_client_sandbox and config.digikey_storage_path:
+            os.environ['DIGIKEY_CLIENT_ID'] = config.digikey_client_id
+            os.environ['DIGIKEY_CLIENT_SECRET'] = config.digikey_client_secret
+            os.environ['DIGIKEY_CLIENT_SANDBOX'] = config.digikey_client_sandbox
+            os.environ['DIGIKEY_STORAGE_PATH'] = config.digikey_storage_path
+        else:
+            errmsg = "Cannot set environment variables for digikey module. Please set "
+            if not config.digikey_client_id:
+                errmsg += "DIGIKEY_CLIENT_ID "
+            if not config.digikey_client_secret:
+                errmsg += "DIGIKEY_CLIENT_SECRET "
+            if not config.digikey_client_sandbox:
+                errmsg += "DIGIKEY_CLIENT_SANDBOX "
+            if not config.digikey_storage_path:
+                errmsg += "DIGIKEY_STORAGE_PATH "
+            
+            raise AttributeError(errmsg)
+        
+    @classmethod
+    def from_digikey_part_number(cls, partnum: str, config: ConfigReader, injest_api_automatically=True, prompt=False) -> 'DigiPart':
+        cls._set_environment(config)
+        raw = digikey.product_details(partnum)
+        if injest_api_automatically:
+            part = cls(raw)
+            part.injest_api(prompt)
+            return part
+        else:
+            return cls(raw)
