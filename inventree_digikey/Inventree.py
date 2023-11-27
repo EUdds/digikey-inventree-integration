@@ -138,8 +138,9 @@ def create_inventree_part(dkpart: DigiPart):
 def find_category(dkpart: DigiPart):
     if API is None:
         load_config()
-    if str.lower(dkpart.category) in catagory_map:
-        return catagory_map[str.lower(dkpart.category)]
+    clean_category = str.lower(dkpart.category)
+    if clean_category in catagory_map:
+        return catagory_map[clean_category]
     else:
         categories = PartCategory.list(API)
         print("="*20)
