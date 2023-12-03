@@ -4,6 +4,8 @@ import pytest
 import pickle
 import os
 
+from inventree_digikey.ConfigReader import ConfigReader
+
 TEST_DATA_PATH = Path(__file__).resolve().parent / "test_data"
 
 @pytest.fixture(scope="session")
@@ -16,6 +18,10 @@ def test_data():
         config = ConfigParser()
         config.read(file)
         data_dict[file.stem] = config
+    
+    data_dict["config_reader"] = ConfigReader(TEST_DATA_PATH / "test_config.ini")
+    
+    
     
     data_dict["test_image"] =  {
         "url":"https://postimg.cc/WF5g5BGP",

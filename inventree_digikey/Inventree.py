@@ -1,53 +1,30 @@
-import configparser
-import os
-
-from inventree.api import InvenTreeAPI
 from inventree.company import SupplierPart, Company, ManufacturerPart
-from inventree.part import Part, PartCategory, Parameter, ParameterTemplate
-from pathlib import Path
+from inventree.part import Part, PartCategory
 
 from .Digikey import DigiPart
 from .ImageManager import ImageManager
+from .ConfigReader import ConfigReader
 
-if "DIGIKEY_INVENTREE_TEST_MODE" in os.environ:
-    CONFIG_FILE_PATH = os.environ["DIGIKEY_INVENTREE_TEST_CONFIG_PATH"]
-else:
-    CONFIG_FILE_PATH = Path(__file__).resolve().parent / "config.ini"
+def import_digikey_part(partnum: str, prompt=False):
+    dkpart = DigiPart.from_digikey_part_number(partnum, injest_api_automatically=True, prompt=prompt)
+    return add_digikey_part(dkpart)
 
-API_URL = None
-USERNAME = None
-PASSWORD = None
-API = None
-
-def load_config():
-    config = configparser.ConfigParser()
-    config.read(CONFIG_FILE_PATH)
-    global API_URL, USERNAME, PASSWORD, API
-
-    API_URL = config['INVENTREE_API']['URL']
-    USERNAME = config['INVENTREE_API']['USER']
-    PASSWORD = config['INVENTREE_API']['PASSWORD']
-    API = InvenTreeAPI(API_URL, username=USERNAME, password=PASSWORD)
-
-
-def add_digikey_part(dkpart: DigiPart):
-    if API is None:
-        load_config()
-    dk = get_digikey_supplier()
-    inv_part = create_inventree_part(dkpart)
+def add_digikey_part(dkpart: DigiPart, config: ConfigReader):
+    dk = get_digikey_supplier(config)
+    inv_part = create_inventree_part(dkpart, config)
     if inv_part == -1:
         return
     base_pk = int(inv_part.pk)
-    mfg = find_manufacturer(dkpart)
+    mfg = find_manufacturer(dkpart, config)
 
-    ManufacturerPart.create(API, {
+    ManufacturerPart.create(config.inventree_api, {
         'part': base_pk,
         'supplier': dk.pk,
         'MPN': dkpart.mfg_part_num,
         'manufacturer': mfg.pk
         })
 
-    SupplierPart.create(API, {
+    return SupplierPart.create(config.inventree_api, {
             "part":base_pk,
             "supplier": dk.pk,
             "SKU": dkpart.digi_part_num,
@@ -56,15 +33,12 @@ def add_digikey_part(dkpart: DigiPart):
             "link": dkpart.link
             })
     
-    return
 
 
-def get_digikey_supplier():
-    if API is None:
-        load_config()
-    dk = Company.list(API, name="Digikey")
+def get_digikey_supplier(config: ConfigReader):
+    dk = Company.list(config.inventree_api, name="Digikey")
     if len(dk) == 0:
-        dk = Company.create(API, {
+        dk = Company.create(config.inventree_api, {
             'name': 'Digikey',
             'is_supplier': True,
             'description': 'Electronics Supply Store'
@@ -73,20 +47,19 @@ def get_digikey_supplier():
     else:
         return dk[0]
 
-def create_inventree_part(dkpart: DigiPart):
-    if API is None:
-        load_config()
-    category = find_category()
-    possible_parts = Part.list(API, name=dkpart.name, description=dkpart.description)
+
+def create_inventree_part(dkpart: DigiPart, config: ConfigReader):
+    category = find_category(config)
+    possible_parts = Part.list(config.inventree_api, name=dkpart.name, description=dkpart.description)
     if len(possible_parts) > 0:
         part_names = [p.name.lower() for p in possible_parts]
         if dkpart.name.lower() in part_names:
             print("Part already exists")
             return -1
-    part = Part.create(API, {
+    part = Part.create(config.inventree_api, {
         'name': dkpart.name,
         'description': dkpart.description,
-        'category': category.pk,
+        'category': category,
         'active': True,
         'virtual': False,
         'component': True,
@@ -96,24 +69,21 @@ def create_inventree_part(dkpart: DigiPart):
     return part
 
 
-def find_category():
-    if API is None:
-        load_config()
-    categories = PartCategory.list(API)
+def find_category(config):
+    categories = PartCategory.list(config.inventree_api)
     print("="*20)
-    print("Choose a category")
+    print(f"Choose a category")
     for idx, category in enumerate(categories):
         print("\t%d %s" %(idx, category.name))
     print("="*20)
     idx = int(input("> "))
-    return categories[idx]
+    return categories[idx].pk
 
-def find_manufacturer(dkpart: DigiPart):
-    if API is None:
-        load_config()
-    possible_manufacturers = Company.list(API, name=dkpart.manufacturer)
+
+def find_manufacturer(dkpart: DigiPart, config: ConfigReader):
+    possible_manufacturers = Company.list(config.inventree_api, name=dkpart.manufacturer)
     if len(possible_manufacturers) == 0:
-        mfg = create_manufacturer(dkpart.manufacturer)
+        mfg = create_manufacturer(dkpart.manufacturer, config)
         return mfg
     else:
         print("="*20)
@@ -124,10 +94,8 @@ def find_manufacturer(dkpart: DigiPart):
         idx = int(input("> "))
         return possible_manufacturers[idx]
 
-def create_manufacturer(name: str, is_supplier: bool=False):
-    if API is None:
-        load_config()
-    mfg = Company.create(API, {
+def create_manufacturer(name: str, config: ConfigReader, is_supplier: bool=False):
+    mfg = Company.create(config.inventree_api, {
         'name': name,
         'is_manufacturer': True,
         'is_supplier': is_supplier,
