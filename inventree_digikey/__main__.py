@@ -15,7 +15,7 @@ def parse_args(args):
     parser.add_argument("-c", "--config", type=Path, help="Path to config file", default=DEFAULT_CONFIG_PATH)
 
     # Add the 'part_number' argument as the last item on the command line
-    parser.add_argument('query_numbers', type=str, help='Part number(s) to import', nargs='*')
+    parser.add_argument('query_numbers', type=str, help='Part number(s) to import', nargs='+')
 
     return parser.parse_args(args)
 

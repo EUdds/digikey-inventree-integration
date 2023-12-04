@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "inventree_digikey"
-version = "0.1.0"
+version = "1.0.0"
 description = "A CLI to import Digikey parts into an Inventree instance"
 authors = ["Eric Udlis <udlis.eric@gmail.com>"]
 license = "MIT"
@@ -18,3 +18,6 @@ pytest = "^7.4.3"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+import_digikey_parts = "inventree_digikey.__main__:main"
