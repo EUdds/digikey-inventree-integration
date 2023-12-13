@@ -4,6 +4,7 @@ from pathlib import Path
 
 SOURCE_ROOT = Path(__file__).resolve().parent.parent / "inventree_digikey"
 
+
 def test_argparse():
     args = test_module.parse_args(["-y", "1234", "5678"])
     assert args.yes == True

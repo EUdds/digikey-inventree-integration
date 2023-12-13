@@ -6,12 +6,12 @@ from urllib.parse import urlparse, quote
 
 from pathlib import Path
 
-class ImageManager:
 
+class ImageManager:
     cache_path: Path = Path(__file__).resolve().parent / "cache"
 
     @classmethod
-    def get_image(cls, url:str) -> str:
+    def get_image(cls, url: str) -> str:
         """
         Gets an image given an url
         returns a filepath
@@ -43,13 +43,19 @@ class ImageManager:
                 f.unlink()
 
     def _filename_generator(size=6) -> str:
-        return "".join(random.choice(string.ascii_lowercase + string.digits) for _ in range(size)) + ".jpg"
+        return (
+            "".join(
+                random.choice(string.ascii_lowercase + string.digits)
+                for _ in range(size)
+            )
+            + ".jpg"
+        )
 
     @classmethod
-    def _download_image(cls, url:str) -> str:
+    def _download_image(cls, url: str) -> str:
         print(f"Trying URL {url}")
 
-        escaped_url = quote(url, safe=':/')
+        escaped_url = quote(url, safe=":/")
 
         parsed_url = urlparse(escaped_url)
 
@@ -59,20 +65,20 @@ class ImageManager:
         path = parsed_url.path
 
         # Create an HTTP connection to the server based on the protocol
-        if protocol == 'http':
+        if protocol == "http":
             conn = http.client.HTTPConnection(server_host)
-        elif protocol == 'https':
+        elif protocol == "https":
             conn = http.client.HTTPSConnection(server_host)
         else:
             print("Unsupported protocol:", protocol)
             exit(1)
 
         # Send an HTTP GET request with custom headers
-        conn.request('GET', path)
+        conn.request("GET", path)
 
         # Get the response
         response = conn.getresponse()
-    
+
         if not response.status == 200:
             print(f"ERROR: Request code is {response.status}")
             return -1
@@ -80,7 +86,7 @@ class ImageManager:
         filename = cls._filename_generator()
 
         filepath = cls.cache_path / filename
-        with open(filepath, 'wb') as handler:
+        with open(filepath, "wb") as handler:
             while True:
                 chunk = response.read(1024)
                 if not chunk:
@@ -88,4 +94,3 @@ class ImageManager:
                 handler.write(chunk)
 
         return str(filepath)
-

@@ -1,4 +1,4 @@
-name: Pytest
+name: Testing and Linting
 
 on: [pull_request]
 
@@ -11,7 +11,7 @@ jobs:
       strategy:
         matrix:
           python-version: ["3.8", "3.9", "3.10", "3.11"]
-  
+
       steps:
       - uses: actions/checkout@v4
       - name: Set up Python ${{ matrix.python-version }}
@@ -19,11 +19,28 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           cache: 'pip'
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          virtualenvs-create: True
+          virtualenvs-in-project: True
+          installer-parallel: true
+      - name: Setup Cache
+        uses: actions/cache@v3
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ steps.full-python-version.outputs.version }}-${{ hashFiles('**/poetry.lock') }}
       - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
+        run: poetry install
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
       - name: Pytest
         run: |
-          pip install pytest pytest-cov
-          python -m pytest --cov=src --cov-report=xml --cov-report=html --junitxml=junit/test-results.xml
+          poetry run pytest --junitxml=junit/test-results.xml
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: psf/black@stable
+        with:
+          options: "--check --verbose"
+          src: "inventree_digikey tests"

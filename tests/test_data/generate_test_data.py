@@ -10,7 +10,7 @@ from inventree_digikey.Digikey import DigiPart
 
 TEST_DATA_PATH = Path(__file__).resolve().parent
 
-DIGIKEY_PART_NUMBER_UNDER_TEST ="296-21752-2-ND"
+DIGIKEY_PART_NUMBER_UNDER_TEST = "296-21752-2-ND"
 
 print("Fetching test data from Digikey API")
 resp = product_details(DIGIKEY_PART_NUMBER_UNDER_TEST)
