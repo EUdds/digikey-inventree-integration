@@ -26,3 +26,4 @@ jobs:
         uses: JRubics/poetry-publish@v1.17
         with:
           pypi_token: ${{ secrets.PYPI_KEY }} # optional
+          repository_name: inventree_digikey_integration
