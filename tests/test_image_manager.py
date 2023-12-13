@@ -1,4 +1,4 @@
-from inventree_digikey.ImageManager import ImageManager
+from inventree_digikey_integration.ImageManager import ImageManager
 import random
 import pytest
 

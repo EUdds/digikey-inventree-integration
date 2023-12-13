@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "inventree_digikey"
+name = "inventree_digikey_integration"
 version = "1.0.0"
 description = "A CLI to import Digikey parts into an Inventree instance"
 authors = ["Eric Udlis <udlis.eric@gmail.com>"]
@@ -22,4 +22,4 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
-import_digikey_parts = "inventree_digikey.__main__:main"
+import_digikey_parts = "inventree_digikey_integration.__main__:main"

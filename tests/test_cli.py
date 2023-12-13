@@ -1,4 +1,4 @@
-import inventree_digikey.__main__ as test_module
+import inventree_digikey_integration.__main__ as test_module
 
 from pathlib import Path
 

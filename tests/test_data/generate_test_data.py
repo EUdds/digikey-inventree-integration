@@ -5,7 +5,7 @@ import os
 
 os.sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
-from inventree_digikey.Digikey import DigiPart
+from inventree_digikey_integration.Digikey import DigiPart
 
 
 TEST_DATA_PATH = Path(__file__).resolve().parent

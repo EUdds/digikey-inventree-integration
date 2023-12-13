@@ -4,7 +4,7 @@ import pytest
 import pickle
 import os
 
-from inventree_digikey.ConfigReader import ConfigReader
+from inventree_digikey_integration.ConfigReader import ConfigReader
 
 TEST_DATA_PATH = Path(__file__).resolve().parent / "test_data"
 

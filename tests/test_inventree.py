@@ -1,5 +1,5 @@
 import pytest
-import inventree_digikey.Inventree as test_module
+import inventree_digikey_integration.Inventree as test_module
 from configparser import ConfigParser
 import inventree.company
 import inventree.api

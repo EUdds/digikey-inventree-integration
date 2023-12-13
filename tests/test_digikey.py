@@ -1,4 +1,4 @@
-from inventree_digikey.Digikey import DigiPart
+from inventree_digikey_integration.Digikey import DigiPart
 from digikey.v3.api import DigikeyApiWrapper
 import digikey
 
