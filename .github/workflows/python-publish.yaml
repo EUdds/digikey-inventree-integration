@@ -29,7 +29,7 @@ jobs:
         # The version of python to install
         python_version: 3.8 # optional, default is latest
         # The version of poetry to install
-        poetry_version: 1.1.6 # optional, default is latest
+        poetry_version: 1.7.0 # optional, default is latest
         # API token to authenticate when uploading package to PyPI (https://pypi.org/manage/account/) or TestPyPI (https://test.pypi.org/manage/account/)
         pypi_token: ${{ secrets.PYPI_KEY }} # optional
         # Name of a repository where the package will be uploaded
