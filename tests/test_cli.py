@@ -1,8 +1,9 @@
-import inventree_digikey.__main__ as test_module
+import inventree_digikey_integration.__main__ as test_module
 
 from pathlib import Path
 
 SOURCE_ROOT = Path(__file__).resolve().parent.parent / "inventree_digikey"
+
 
 def test_argparse():
     args = test_module.parse_args(["-y", "1234", "5678"])
