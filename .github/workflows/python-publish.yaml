@@ -21,16 +21,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Publish python poetry package
-      # You may pin to the exact commit or the version.
-      # uses: JRubics/poetry-publish@b71e946be561eaf8bfb7562ecc97c26fb8583070
-      uses: JRubics/poetry-publish@v1.17
-      with:
-        # The version of python to install
-        # python_version: 3.8 # optional, default is latest
-        # The version of poetry to install
-        # poetry_version: 1.7.0 # optional, default is latest
-        # API token to authenticate when uploading package to PyPI (https://pypi.org/manage/account/) or TestPyPI (https://test.pypi.org/manage/account/)
-        pypi_token: ${{ secrets.PYPI_KEY }} # optional
-        # Name of a repository where the package will be uploaded
-        repository_name: inventree_digikey_integration # optional
+      - uses: actions/checkout@v4
+      - name: Build and publish to PyPI
+        uses: JRubics/poetry-publish@v1.17
+        with:
+          pypi_token: ${{ secrets.PYPI_KEY }} # optional
