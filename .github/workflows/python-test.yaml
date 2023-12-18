@@ -1,6 +1,13 @@
 name: Testing and Linting
 
-on: [pull_request]
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  release:
+    types: [published]
+
 
 jobs:
   build:
@@ -43,4 +50,4 @@ jobs:
       - uses: psf/black@stable
         with:
           options: "--check --verbose"
-          src: "inventree_digikey tests"
+          src: "inventree_digikey_integration tests"
