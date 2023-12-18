@@ -1,10 +1,19 @@
 [tool.poetry]
 name = "inventree_digikey_integration"
-version = "0.1.1"
+version = "0.1.2"
 description = "A CLI to import Digikey parts into an Inventree instance"
 authors = ["Eric Udlis <udlis.eric@gmail.com>"]
 license = "MIT"
 readme = "README.md"
+homepage = "https://github.com/EUdds/digikey-inventree-integration"
+repository = "https://github.com/EUdds/digikey-inventree-integration"
+keywords = ["inventree", "digikey"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+]
 
 [tool.poetry.dependencies]
 python = "^3.8"
