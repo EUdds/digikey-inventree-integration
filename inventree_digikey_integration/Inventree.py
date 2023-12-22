@@ -6,11 +6,11 @@ from .ImageManager import ImageManager
 from .ConfigReader import ConfigReader
 
 
-def import_digikey_part(partnum: str, prompt=False):
+def import_digikey_part(partnum: str, config: ConfigReader, prompt=False):
     dkpart = DigiPart.from_digikey_part_number(
-        partnum, injest_api_automatically=True, prompt=prompt
+        partnum, config, injest_api_automatically=True, prompt=prompt
     )
-    return add_digikey_part(dkpart)
+    return add_digikey_part(dkpart, config)
 
 
 def add_digikey_part(dkpart: DigiPart, config: ConfigReader):

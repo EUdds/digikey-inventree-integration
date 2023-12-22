@@ -2,6 +2,7 @@ import argparse
 import sys
 
 from .Inventree import import_digikey_part
+from .ConfigReader import ConfigReader
 from pathlib import Path
 
 DEFAULT_CONFIG_PATH = Path(__file__).resolve().parent / "config.ini"
@@ -30,23 +31,28 @@ def parse_args(args):
 
     # Add the 'part_number' argument as the last item on the command line
     parser.add_argument(
-        "query_numbers", type=str, help="Part number(s) to import", nargs="+"
+        "query_numbers", type=str, help="Part number(s) to import", nargs="*"
     )
 
     return parser.parse_args(args)
 
 
+def import_parts(args):
+    config = ConfigReader(args.config)
+    if len(args.query_numbers) == 0:
+        partnum = input("Enter a digikey Part Number > ")
+        import_digikey_part(partnum, config, not args.yes)
+        return 1
+    else:
+        for num in args.query_numbers:
+            import_digikey_part(num, config, not args.yes)
+        return len(args.query_numbers)
+
+
 def main():
     args = parse_args(sys.argv[1:])
-    if len(args.query_numbers) == 0:
-        print("No part numbers specified")
-        sys.exit(1)
-    if len(args.query_number) == 1:
-        partnum = input("Enter a digikey Part Number > ")
-        import_digikey_part(partnum, not args.yes)
-    else:
-        for num in args.query_number:
-            import_digikey_part(num, not args.yes)
+    num_parts = import_parts(args)
+    print(f"Attempted to import {num_parts} parts")
 
 
 if __name__ == "__main__":
