@@ -19,6 +19,7 @@ def test_data():
         config = ConfigParser()
         config.read(file)
         data_dict[file.stem] = config
+        data_dict[f"{file.stem}_path"] = file
 
     data_dict["config_reader"] = ConfigReader(TEST_DATA_PATH / "test_config.ini")
 
