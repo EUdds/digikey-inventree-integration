@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "inventree_digikey_integration"
-version = "0.1.2.1"
+version = "0.1.2.2"
 description = "A CLI to import Digikey parts into an Inventree instance"
 authors = ["Eric Udlis <udlis.eric@gmail.com>"]
 license = "MIT"
