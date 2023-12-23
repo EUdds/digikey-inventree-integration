@@ -6,12 +6,14 @@ from pathlib import Path
 from .SupplierBase import SupplierPartBase
 from ..ConfigReader import ConfigReader
 
-class DigikeyPart(SupplierPartBase):
 
+class DigikeyPart(SupplierPartBase):
     SUPPLIER_NAME = "Digikey"
 
     def __init__(self, api_resp, injest_api_automatically=True, prompt=False):
-        super().__init__(api_resp, injest_api_automatically=injest_api_automatically, prompt=prompt)
+        super().__init__(
+            api_resp, injest_api_automatically=injest_api_automatically, prompt=prompt
+        )
 
     def injest_api(self, prompt=False):
         self.manufacturer = self.raw_value.manufacturer.value
@@ -25,13 +27,13 @@ class DigikeyPart(SupplierPartBase):
             self.parameters.append(cleaned_param)
 
         self.set_part_name(self.raw_value.manufacturer_part_number, prompt=prompt)
-    
+
     def _extract_picture(self):
         for media in self.raw_value.media_links:
             print(media.media_type)
             if "Product Photos" in media.media_type:
                 self.picture = "%s" % media.url
-    
+
     @classmethod
     def from_supplier_part_number(
         cls,

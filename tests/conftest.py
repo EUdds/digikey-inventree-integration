@@ -39,7 +39,6 @@ def test_data():
             else:
                 raise ValueError(f"Unknown file type {file.suffix}")
 
-
     return data_dict
 
 
@@ -51,4 +50,3 @@ def test_supplier_data():
         "description": "Electronics Supply Store",
         "pk": 1,
     }
-

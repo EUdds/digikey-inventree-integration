@@ -1,63 +1,108 @@
 from inventree.company import SupplierPart, Company, ManufacturerPart
 from inventree.part import Part, PartCategory
+from inventree.base import InventreeObject
 
-from .suppliers.Digikey import DigikeyPart
+from .suppliers import DigikeyPart
+from .suppliers.SupplierBase import SupplierPartBase
 from .ImageManager import ImageManager
 from .ConfigReader import ConfigReader
 
 
-def import_digikey_part(partnum: str, config: ConfigReader, prompt=False):
-    dkpart = DigikeyPart.from_digikey_part_number(
-        partnum, config, injest_api_automatically=True, prompt=prompt
-    )
-    return add_digikey_part(dkpart, config)
+class InventreePart:
+    def __init__(self, supplier_part_number, supplier):
+        self.supplier_part_number = supplier_part_number
+        self.supplier = supplier
 
+    def import_part_from_supplier(self, config: ConfigReader, prompt=False):
+        for supplier in SupplierPartBase.__subclasses__():
+            if supplier.SUPPLIER_NAME == self.supplier:
+                self.supplier_part = supplier.from_supplier_part_number(
+                    self.supplier_part_number, config, prompt=prompt
+                )
+                break
+        else:
+            raise ValueError(f"Unknown supplier {self.supplier}")
 
-def add_digikey_part(dkpart: DigikeyPart, config: ConfigReader):
-    dk = get_digikey_supplier(config)
-    inv_part = create_inventree_part(dkpart, config)
-    if inv_part == -1:
-        return
-    base_pk = int(inv_part.pk)
-    mfg = find_manufacturer(dkpart, config)
+    def get_supplier(self, config: ConfigReader):
+        suppliers = Company.list(config.inventree_api, name=self.supplier)
+        if len(suppliers) == 0:
+            supplier = Company.create(
+                config.inventree_api,
+                {
+                    "name": f"{self.supplier}",
+                    "is_supplier": True,
+                    "description": f"Automatically created supplier for {self.supplier}",
+                },
+            )
+            return supplier
 
-    ManufacturerPart.create(
-        config.inventree_api,
-        {
-            "part": base_pk,
-            "supplier": dk.pk,
-            "MPN": dkpart.mfg_part_num,
-            "manufacturer": mfg.pk,
-        },
-    )
+        return suppliers[0]
 
-    return SupplierPart.create(
-        config.inventree_api,
-        {
-            "part": base_pk,
-            "supplier": dk.pk,
-            "SKU": dkpart.supplier_part_num,
-            "manufacturer": mfg.pk,
-            "description": dkpart.description,
-            "link": dkpart.link,
-        },
-    )
+    def create_inventree_part(self, config: ConfigReader):
+        category = find_category(config)
+        possible_parts = Part.list(
+            config.inventree_api,
+            name=self.supplier_part.name,
+            description=self.supplier_part.description,
+        )
+        if len(possible_parts) > 0:
+            part_names = [p.name.lower() for p in possible_parts]
+            if self.supplier_part.name.lower() in part_names:
+                print("Part already exists")
+                existing_part = possible_parts[
+                    part_names.index(self.supplier_part.name.lower())
+                ]
+                return existing_part
 
-
-def get_digikey_supplier(config: ConfigReader):
-    dk = Company.list(config.inventree_api, name="Digikey")
-    if len(dk) == 0:
-        dk = Company.create(
+        part = Part.create(
             config.inventree_api,
             {
-                "name": "Digikey",
-                "is_supplier": True,
-                "description": "Electronics Supply Store",
+                "name": self.supplier_part.name,
+                "description": self.supplier_part.description,
+                "category": category,
+                "active": True,
+                "virtual": False,
+                "component": True,
+                "purchaseable": 1,
             },
         )
-        return dk
-    else:
-        return dk[0]
+        upload_picture(self.supplier_part, part)
+        return part
+
+    def create_manufacturer_part(self, config: ConfigReader, base_pk: int):
+        mfg = find_manufacturer(self.supplier_part, config)
+        supplier_pk = int(self.get_supplier(config).pk)
+        mfg_part = ManufacturerPart.create(
+            config.inventree_api,
+            {
+                "part": base_pk,
+                "supplier": supplier_pk,
+                "MPN": self.supplier_part.mfg_part_num,
+                "manufacturer": mfg.pk,
+            },
+        )
+        return mfg_part
+
+    def create_supplier_part(self, config: ConfigReader, base_pk: int, mfg_pk: int):
+        supplier_part = SupplierPart.create(
+            config.inventree_api,
+            {
+                "part": base_pk,
+                "supplier": self.get_supplier_pk(config),
+                "SKU": self.supplier_part.supplier_part_num,
+                "manufacturer": mfg_pk,
+                "description": self.supplier_part.description,
+                "link": self.supplier_part.link,
+            },
+        )
+        return supplier_part.pk
+
+    def add_to_inventree(self, config: ConfigReader):
+        inv_part = self.create_inventree_part(config)
+        inv_pk = int(inv_part.pk)
+        mfg_part_pk = int(self.create_manufacturer_part(config, inv_pk).pk)
+        supplier_part_pk = self.create_supplier_part(config, inv_pk, mfg_part_pk)
+        return supplier_part_pk
 
 
 def create_inventree_part(dkpart: DigikeyPart, config: ConfigReader):
@@ -69,7 +114,7 @@ def create_inventree_part(dkpart: DigikeyPart, config: ConfigReader):
         part_names = [p.name.lower() for p in possible_parts]
         if dkpart.name.lower() in part_names:
             print("Part already exists")
-            return -1
+            return possible_parts[part_names.index(dkpart.name.lower())]
     part = Part.create(
         config.inventree_api,
         {

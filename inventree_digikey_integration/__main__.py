@@ -1,7 +1,7 @@
 import argparse
 import sys
 
-from .Inventree import import_digikey_part
+from .Inventree import InventreePart
 from .ConfigReader import ConfigReader
 from pathlib import Path
 
@@ -41,11 +41,15 @@ def import_parts(args):
     config = ConfigReader(args.config)
     if len(args.query_numbers) == 0:
         partnum = input("Enter a digikey Part Number > ")
-        import_digikey_part(partnum, config, not args.yes)
+        inv_part = InventreePart(partnum, "Digikey")
+        inv_part.import_part_from_supplier(config, not args.yes)
+        inv_part.add_to_inventree(config)
         return 1
     else:
         for num in args.query_numbers:
-            import_digikey_part(num, config, not args.yes)
+            inv_part = InventreePart(num, "Digikey")
+            inv_part.import_part_from_supplier(config, not args.yes)
+            inv_part.add_to_inventree(config)
         return len(args.query_numbers)
 
 

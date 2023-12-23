@@ -3,6 +3,7 @@ import inventree_digikey_integration.Inventree as test_module
 from configparser import ConfigParser
 import inventree.company
 import inventree.api
+import digikey
 
 
 def mock_create_company(*args, **kwargs):
@@ -31,157 +32,286 @@ def test_api(test_data, monkeypatch):
     # Cleanup here as necessary
 
 
-def test_get_digikey_supplier_new_company(test_api, monkeypatch, test_data):
-    monkeypatch.setattr(inventree.company.Company, "list", lambda *args, **kwargs: [])
-    monkeypatch.setattr(inventree.company.Company, "create", mock_create_company)
-    dk = test_module.get_digikey_supplier(test_data["config_reader"])
-    assert dk.pk == 1
-    assert dk.name == "Digikey"
-    assert dk.is_supplier == True
-    assert dk.description == "Electronics Supply Store"
+@pytest.mark.parametrize(
+    "supplier_part_number,supplier,supplier_wrapper_class,mfg_part_number,mfg",
+    [
+        # Part Number       Supplier    Supplier Part Wrapper Class Name    MFG Part Number,    MFG
+        ("296-21752-2-ND", "Digikey", "DigikeyPart", "NA555DR", "Texas Instruments"),
+    ],
+)
+class TestInventreePart:
+    def test_supplier_mapping(
+        self,
+        supplier_part_number,
+        supplier,
+        supplier_wrapper_class,
+        mfg_part_number,
+        mfg,
+        test_data,
+        monkeypatch,
+    ):
+        monkeypatch.setattr(
+            "digikey.product_details",
+            lambda x: test_data["test_api_responses"][f"{supplier}_resp"],
+        )
+        test_part = test_module.InventreePart(supplier_part_number, supplier)
+        test_part.import_part_from_supplier(test_data["config_reader"])
+        assert test_part.supplier == supplier
+        assert test_part.supplier_part_number == supplier_part_number
+        assert type(test_part.supplier_part).__name__ == supplier_wrapper_class
 
+    def test_get_supplier_new_company(
+        self,
+        supplier_part_number,
+        supplier,
+        supplier_wrapper_class,
+        mfg_part_number,
+        mfg,
+        monkeypatch,
+        test_data,
+    ):
+        monkeypatch.setattr(
+            "digikey.product_details",
+            lambda x: test_data["test_api_responses"][f"{supplier}_resp"],
+        )
+        monkeypatch.setattr(
+            "inventree.company.Company.list", lambda *args, **kwargs: []
+        )
+        monkeypatch.setattr(inventree.company.Company, "create", mock_create_company)
 
-def test_get_digikey_supplier_existing_company(
-    test_api, test_supplier_data, monkeypatch, test_data
-):
-    monkeypatch.setattr(
-        inventree.company.Company,
-        "list",
-        lambda *args, **kwargs: [
-            inventree.company.Company(test_api, data=test_supplier_data)
-        ],
-    )
-    dk = test_module.get_digikey_supplier(test_data["config_reader"])
-    assert dk.pk == 1
+        test_part = test_module.InventreePart(supplier_part_number, supplier)
+        test_part.import_part_from_supplier(test_data["config_reader"])
 
+        test_supplier = test_part.get_supplier(test_data["config_reader"])
 
-def test_create_inventree_part(monkeypatch, test_data, test_api):
-    monkeypatch.setattr(
-        test_module,
-        "find_category",
-        lambda *args, **kwargs: inventree.part.PartCategory(test_api, data={"pk": 1}),
-    )
-    monkeypatch.setattr(
-        inventree.part.Part, "uploadImage", lambda *args, **kwargs: None
-    )
-    monkeypatch.setattr(inventree.part.Part, "create", mock_create_part)
-    monkeypatch.setattr(inventree.part.Part, "list", lambda *args, **kwargs: [])
+        assert test_supplier.pk == 1
+        assert test_supplier.name == supplier
+        assert test_supplier.is_supplier == True
 
-    inventree_part = test_module.create_inventree_part(
-        test_data["test_dkpart"], test_data["config_reader"]
-    )
-    assert inventree_part.pk == 1
-    assert inventree_part.name == test_data["test_dkpart"].name
-    assert inventree_part.description == test_data["test_dkpart"].description
+    def test_get_supplier_existing_company(
+        self,
+        supplier_part_number,
+        supplier,
+        supplier_wrapper_class,
+        mfg_part_number,
+        mfg,
+        monkeypatch,
+        test_data,
+        test_api,
+    ):
+        monkeypatch.setattr(
+            "digikey.product_details",
+            lambda x: test_data["test_api_responses"][f"{supplier}_resp"],
+        )
+        mock_supplier_data = {
+            "pk": 1,
+            "name": supplier,
+            "description": supplier,
+        }
+        monkeypatch.setattr(
+            "inventree.company.Company.list",
+            lambda *args, **kwargs: [
+                inventree.company.Company(test_api, data=mock_supplier_data)
+            ],
+        )
 
+        test_part = test_module.InventreePart(supplier_part_number, supplier)
+        test_part.import_part_from_supplier(test_data["config_reader"])
 
-def test_create_inventree_part_part_exists(test_data, monkeypatch, test_api):
-    monkeypatch.setattr(
-        test_module,
-        "find_category",
-        lambda *args, **kwargs: inventree.part.PartCategory(test_api, data={"pk": 1}),
-    )
-    monkeypatch.setattr(
-        inventree.part.Part, "uploadImage", lambda *args, **kwargs: None
-    )
-    monkeypatch.setattr(inventree.part.Part, "create", mock_create_part)
-    monkeypatch.setattr(
-        inventree.part.Part,
-        "list",
-        lambda *args, **kwargs: [
-            inventree.part.Part(
-                test_api,
-                data={
-                    "pk": 1,
-                    "name": test_data["test_dkpart"].name,
-                    "description": test_data["test_dkpart"].description,
-                },
-            )
-        ],
-    )
+        test_supplier = test_part.get_supplier(test_data["config_reader"])
 
-    inventree_part = test_module.create_inventree_part(
-        test_data["test_dkpart"], test_data["config_reader"]
-    )
-    assert inventree_part == -1
+        assert test_supplier.pk == 1
+        assert test_supplier.name == supplier
 
+    def test_create_inventree_part(
+        self,
+        supplier_part_number,
+        supplier,
+        supplier_wrapper_class,
+        mfg_part_number,
+        mfg,
+        monkeypatch,
+        test_data,
+        test_api,
+    ):
+        monkeypatch.setattr(
+            "inventree.part.PartCategory.list",
+            lambda *args, **kwargs: [
+                inventree.part.PartCategory(
+                    test_api, data={"pk": 1, "name": "Resistors", "parent": None}
+                )
+            ],
+        )
+        monkeypatch.setattr("builtins.input", lambda *args, **kwargs: "0")
+        monkeypatch.setattr("inventree.part.Part.list", lambda *args, **kwargs: [])
+        monkeypatch.setattr(
+            inventree.part.Part, "uploadImage", lambda *args, **kwargs: None
+        )
+        monkeypatch.setattr(inventree.part.Part, "create", mock_create_part)
+        monkeypatch.setattr(
+            "digikey.product_details",
+            lambda x: test_data["test_api_responses"][f"{supplier}_resp"],
+        )
 
-def test_find_manufacturer(test_data, monkeypatch, test_api):
-    monkeypatch.setattr(inventree.company.Company, "list", lambda *args, **kwargs: [])
-    monkeypatch.setattr(inventree.company.Company, "create", mock_create_company)
-    test_manufacturer = test_module.find_manufacturer(
-        test_data["test_dkpart"], test_data["config_reader"]
-    )
-    assert test_manufacturer.pk == 1
-    assert test_manufacturer.name == test_data["test_dkpart"].manufacturer
-    assert test_manufacturer.is_supplier == False
-    assert test_manufacturer.description == test_data["test_dkpart"].manufacturer
+        test_part = test_module.InventreePart(supplier_part_number, supplier)
+        test_part.import_part_from_supplier(test_data["config_reader"])
+        test_inv_part = test_part.create_inventree_part(test_data["config_reader"])
 
+        assert test_inv_part.pk == 1
+        assert test_inv_part.name == mfg_part_number
+        assert test_inv_part.category == 1
 
-def test_find_manufacturer_manufactuer_exists(test_data, monkeypatch, test_api):
-    monkeypatch.setattr(
-        inventree.company.Company,
-        "list",
-        lambda *args, **kwargs: [
-            inventree.company.Company(
-                test_api,
-                data={
-                    "pk": 1,
-                    "name": test_data["test_dkpart"].manufacturer,
-                    "description": test_data["test_dkpart"].manufacturer,
-                    "is_supplier": False,
-                },
-            )
-        ],
-    )
-    monkeypatch.setattr("builtins.input", lambda *args, **kwargs: "0")
-    test_manufacturer = test_module.find_manufacturer(
-        test_data["test_dkpart"], test_data["config_reader"]
-    )
-    assert test_manufacturer.pk == 1
-    assert test_manufacturer.name == "Texas Instruments"
-    assert test_manufacturer.is_supplier == False
-    assert test_manufacturer.description == "Texas Instruments"
+    def test_create_inventree_part_exists(
+        self,
+        supplier_part_number,
+        supplier,
+        supplier_wrapper_class,
+        mfg_part_number,
+        mfg,
+        monkeypatch,
+        test_data,
+    ):
+        monkeypatch.setattr(
+            test_module,
+            "find_category",
+            lambda *args, **kwargs: inventree.part.PartCategory(
+                test_api, data={"pk": 1}
+            ),
+        )
+        monkeypatch.setattr(
+            inventree.part.Part, "uploadImage", lambda *args, **kwargs: None
+        )
+        monkeypatch.setattr(inventree.part.Part, "create", mock_create_part)
+        monkeypatch.setattr(
+            inventree.part.Part,
+            "list",
+            lambda *args, **kwargs: [
+                inventree.part.Part(
+                    test_api,
+                    data={
+                        "pk": 1,
+                        "name": mfg_part_number,
+                        "description": supplier_part_number,
+                    },
+                )
+            ],
+        )
+        monkeypatch.setattr(
+            "digikey.product_details",
+            lambda x: test_data["test_api_responses"][f"{supplier}_resp"],
+        )
 
+        test_part = test_module.InventreePart(supplier_part_number, supplier)
+        test_part.import_part_from_supplier(test_data["config_reader"])
+        test_inv_part = test_part.create_inventree_part(test_data["config_reader"])
 
-def test_add_digikey_part(test_data, monkeypatch, test_api):
-    monkeypatch.setattr(
-        inventree.company.Company,
-        "list",
-        lambda *args, **kwargs: [
-            inventree.company.Company(
-                test_api,
-                data={
-                    "pk": 1,
-                    "name": "Digikey",
-                    "description": "Electronics Supply Store",
-                    "is_supplier": True,
-                },
-            )
-        ],
-    )
-    monkeypatch.setattr(inventree.part.Part, "create", mock_create_part)
-    monkeypatch.setattr(inventree.part.Part, "list", lambda *args, **kwargs: [])
-    monkeypatch.setattr(
-        inventree.part.Part, "uploadImage", lambda *args, **kwargs: None
-    )
-    monkeypatch.setattr(
-        inventree.part.PartCategory,
-        "list",
-        lambda *args, **kwargs: [
-            inventree.part.PartCategory(
-                test_api, data={"pk": 1, "name": "Resistors", "parent": None}
-            )
-        ],
-    )
-    monkeypatch.setattr("builtins.input", lambda *args, **kwargs: "0")
-    monkeypatch.setattr(
-        inventree.company.ManufacturerPart, "create", lambda *args, **kwargs: None
-    )
-    monkeypatch.setattr(
-        inventree.company.SupplierPart, "create", lambda *args, **kwargs: None
-    )
+        assert test_inv_part.pk == 1
+        assert test_inv_part.name == mfg_part_number
+        assert test_inv_part.description == supplier_part_number
 
-    test_module.add_digikey_part(
-        test_data["test_dkpart"], test_data["config_reader"]
-    )  # Yeah, I should add some return value error checking type stuff here
+    def test_create_manufacturer_part(
+        self,
+        supplier_part_number,
+        supplier,
+        supplier_wrapper_class,
+        mfg_part_number,
+        mfg,
+        monkeypatch,
+        test_data,
+        test_api,
+    ):
+        monkeypatch.setattr(
+            test_module,
+            "find_category",
+            lambda *args, **kwargs: inventree.part.PartCategory(
+                test_api, data={"pk": 1}
+            ),
+        )
+        monkeypatch.setattr(inventree.part.Part, "create", mock_create_part)
+        monkeypatch.setattr("inventree.part.Part.list", lambda *args, **kwargs: [])
+        monkeypatch.setattr(
+            inventree.part.Part, "uploadImage", lambda *args, **kwargs: None
+        )
+        monkeypatch.setattr(
+            inventree.base.InventreeObject, "reload", lambda *args, **kwargs: None
+        )
+
+        monkeypatch.setattr(
+            inventree.company.ManufacturerPart,
+            "create",
+            lambda *args, **kwargs: inventree.company.ManufacturerPart(
+                test_api, 1, data=args[1]
+            ),
+        )
+        monkeypatch.setattr(
+            "inventree.company.Company.list",
+            lambda *args, **kwargs: [
+                inventree.company.Company(
+                    test_api,
+                    data={
+                        "pk": 1,
+                        "name": supplier,
+                        "description": supplier,
+                    },
+                ),
+                inventree.company.Company(
+                    test_api,
+                    data={
+                        "pk": 2,
+                        "name": mfg,
+                        "description": mfg,
+                    },
+                ),
+            ],
+        )
+        monkeypatch.setattr("builtins.input", lambda *args, **kwargs: "1")
+        monkeypatch.setattr(
+            "digikey.product_details",
+            lambda x: test_data["test_api_responses"][f"{supplier}_resp"],
+        )
+
+        test_part = test_module.InventreePart(supplier_part_number, supplier)
+        test_part.import_part_from_supplier(test_data["config_reader"])
+        test_inv_part = test_part.create_inventree_part(test_data["config_reader"])
+        test_mfg_part = test_part.create_manufacturer_part(
+            test_data["config_reader"], test_inv_part.pk
+        )
+
+        assert test_mfg_part.MPN == mfg_part_number
+        assert test_mfg_part.manufacturer == 2
+        assert test_mfg_part.part == test_inv_part.pk
+
+    def test_find_manufacturer_exists(
+        self,
+        supplier_part_number,
+        supplier,
+        supplier_wrapper_class,
+        mfg_part_number,
+        mfg,
+        monkeypatch,
+        test_data,
+        test_api,
+    ):
+        monkeypatch.setattr(
+            inventree.company.Company,
+            "list",
+            lambda *args, **kwargs: [
+                inventree.company.Company(
+                    test_api,
+                    data={
+                        "pk": 1,
+                        "name": mfg,
+                        "description": mfg,
+                        "is_supplier": False,
+                    },
+                )
+            ],
+        )
+        monkeypatch.setattr("builtins.input", lambda *args, **kwargs: "0")
+        test_manufacturer = test_module.find_manufacturer(
+            test_data["test_dkpart"], test_data["config_reader"]
+        )
+        assert test_manufacturer.pk == 1
+        assert test_manufacturer.name == mfg
+        assert test_manufacturer.is_supplier == False
+        assert test_manufacturer.description == mfg

@@ -49,9 +49,17 @@ def test_argparse():
 
 
 def test_import_parts(monkeypatch, test_data):
-    # This test is to make sure that the function chooses the correct branch of the if statement
-    # Lets ignore the actual parsing here
-    monkeypatch.setattr(test_module, "import_digikey_part", lambda x, y, z: None)
+    monkeypatch.setattr(
+        inventree_digikey_integration.Inventree.InventreePart,
+        "import_part_from_supplier",
+        lambda *args: None,
+    )
+    monkeypatch.setattr(
+        inventree_digikey_integration.Inventree.InventreePart,
+        "add_to_inventree",
+        lambda *args: None,
+    )
+
     # Format (args, expected_return)
     test_inputs = [
         (["-c", f"{test_data['test_config_path']}", "4116R-1-151LF"], 1),

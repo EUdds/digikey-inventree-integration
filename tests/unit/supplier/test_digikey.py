@@ -4,7 +4,7 @@ import digikey
 
 
 def test_part_creation(test_data):
-    test_resp = test_data["test_resp"]
+    test_resp = test_data["test_api_responses"]["Digikey_resp"]
     dkpart = DigikeyPart(test_resp)
     dkpart.injest_api(prompt=False)
     assert (
@@ -35,7 +35,10 @@ def test_part_creation(test_data):
 
 
 def test_part_creation_from_partnumber(test_data, monkeypatch):
-    monkeypatch.setattr("digikey.product_details", lambda x: test_data["test_resp"])
+    monkeypatch.setattr(
+        "digikey.product_details",
+        lambda x: test_data["test_api_responses"]["Digikey_resp"],
+    )
     dkpart = DigikeyPart.from_supplier_part_number(
         "296-21752-2-ND", test_data["config_reader"]
     )
@@ -60,7 +63,7 @@ def test_part_creation_from_partnumber(test_data, monkeypatch):
         dkpart.picture
         == "https://mm.digikey.com/Volume0/opasdata/d220001/medias/images/4849/296_8-SOIC.jpg"
     )
-    for param in test_data["test_resp"].parameters:
+    for param in test_data["test_api_responses"]["Digikey_resp"].parameters:
         assert (
             param.parameter,
             param.value,
