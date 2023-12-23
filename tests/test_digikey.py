@@ -1,11 +1,11 @@
-from inventree_digikey_integration.Digikey import DigiPart
+from inventree_digikey_integration.suppliers.Digikey import DigikeyPart
 from digikey.v3.api import DigikeyApiWrapper
 import digikey
 
 
 def test_part_creation(test_data):
     test_resp = test_data["test_resp"]
-    dkpart = DigiPart(test_resp)
+    dkpart = DigikeyPart(test_resp)
     dkpart.injest_api(prompt=False)
     assert (
         dkpart.manufacturer == "Texas Instruments"
@@ -36,10 +36,9 @@ def test_part_creation(test_data):
 
 def test_part_creation_from_partnumber(test_data, monkeypatch):
     monkeypatch.setattr("digikey.product_details", lambda x: test_data["test_resp"])
-    dkpart = DigiPart.from_digikey_part_number(
+    dkpart = DigikeyPart.from_supplier_part_number(
         "296-21752-2-ND", test_data["config_reader"]
     )
-    dkpart.injest_api(prompt=False)
 
     assert (
         dkpart.manufacturer == "Texas Instruments"

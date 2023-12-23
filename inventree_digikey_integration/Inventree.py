@@ -1,19 +1,19 @@
 from inventree.company import SupplierPart, Company, ManufacturerPart
 from inventree.part import Part, PartCategory
 
-from .Digikey import DigiPart
+from .suppliers.Digikey import DigikeyPart
 from .ImageManager import ImageManager
 from .ConfigReader import ConfigReader
 
 
 def import_digikey_part(partnum: str, config: ConfigReader, prompt=False):
-    dkpart = DigiPart.from_digikey_part_number(
+    dkpart = DigikeyPart.from_digikey_part_number(
         partnum, config, injest_api_automatically=True, prompt=prompt
     )
     return add_digikey_part(dkpart, config)
 
 
-def add_digikey_part(dkpart: DigiPart, config: ConfigReader):
+def add_digikey_part(dkpart: DigikeyPart, config: ConfigReader):
     dk = get_digikey_supplier(config)
     inv_part = create_inventree_part(dkpart, config)
     if inv_part == -1:
@@ -60,7 +60,7 @@ def get_digikey_supplier(config: ConfigReader):
         return dk[0]
 
 
-def create_inventree_part(dkpart: DigiPart, config: ConfigReader):
+def create_inventree_part(dkpart: DigikeyPart, config: ConfigReader):
     category = find_category(config)
     possible_parts = Part.list(
         config.inventree_api, name=dkpart.name, description=dkpart.description
@@ -97,7 +97,7 @@ def find_category(config):
     return categories[idx].pk
 
 
-def find_manufacturer(dkpart: DigiPart, config: ConfigReader):
+def find_manufacturer(dkpart: DigikeyPart, config: ConfigReader):
     possible_manufacturers = Company.list(
         config.inventree_api, name=dkpart.manufacturer
     )
@@ -133,7 +133,7 @@ def create_manufacturer(name: str, config: ConfigReader, is_supplier: bool = Fal
     return mfg
 
 
-def upload_picture(dkpart: DigiPart, invPart):
+def upload_picture(dkpart: DigikeyPart, invPart):
     if dkpart.picture is not None:
         img_file = ImageManager.get_image(dkpart.picture)
         invPart.uploadImage(img_file)

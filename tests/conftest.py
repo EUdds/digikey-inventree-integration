@@ -40,3 +40,4 @@ def test_supplier_data():
         "description": "Electronics Supply Store",
         "pk": 1,
     }
+

@@ -5,7 +5,7 @@ import os
 
 os.sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
-from inventree_digikey_integration.Digikey import DigiPart
+from inventree_digikey_integration.suppliers.Digikey import DigikeyPart
 
 
 TEST_DATA_PATH = Path(__file__).resolve().parent
@@ -21,7 +21,7 @@ with open(TEST_DATA_PATH / "test_resp.pkl", "wb") as f:
 
 print("Saving test data to %s" % str(Path(TEST_DATA_PATH) / "test_dkpart.pkl"))
 with open(TEST_DATA_PATH / "test_dkpart.pkl", "wb") as f:
-    dkpart = DigiPart(resp)
+    dkpart = DigikeyPart(resp)
     dkpart.injest_api(prompt=False)
     pickle.dump(dkpart, f)
 

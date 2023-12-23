@@ -3,25 +3,17 @@ import digikey  # have to use digikey.product_details for monkeypatch testing
 import os
 from pathlib import Path
 
-from .ConfigReader import ConfigReader
+from .SupplierBase import SupplierPartBase
+from ..ConfigReader import ConfigReader
 
+class DigikeyPart(SupplierPartBase):
 
-class DigiPart:
-    def __init__(self, api_value):
-        self.name = None
-        self.supplier = "Digikey"
-        self.digi_part_num = None
-        self.mfg_part_num = None
-        self.manufacturer = None
-        self.description = None
-        self.link = None
-        self.price_breaks = []
-        self.raw_value = api_value
-        self.parameters = []
-        self.picture = None
-        self.thumbnail = None
+    SUPPLIER_NAME = "Digikey"
 
-    def injest_api(self, prompt=True):
+    def __init__(self, api_resp, injest_api_automatically=True, prompt=False):
+        super().__init__(api_resp, injest_api_automatically=injest_api_automatically, prompt=prompt)
+
+    def injest_api(self, prompt=False):
         self.manufacturer = self.raw_value.manufacturer.value
         self.mfg_part_num = self.raw_value.manufacturer_part_number
         self.description = self.raw_value.product_description
@@ -32,27 +24,30 @@ class DigiPart:
             cleaned_param = (raw_param.parameter, raw_param.value)
             self.parameters.append(cleaned_param)
 
-        if prompt:
-            self.prompt_part_name()
-        else:
-            self.name = self.raw_value.manufacturer_part_number
-
-    def prompt_part_name(self):
-        found_name = self.raw_value.manufacturer_part_number
-        print(f"Found {found_name} - Would you like to use this name (y/n)")
-        ans = input("> ")
-        if ans == "y":
-            self.name = found_name
-        else:
-            print("Type a new name")
-            name = input("> ")
-            self.name = name
-
+        self.set_part_name(self.raw_value.manufacturer_part_number, prompt=prompt)
+    
     def _extract_picture(self):
         for media in self.raw_value.media_links:
             print(media.media_type)
             if "Product Photos" in media.media_type:
                 self.picture = "%s" % media.url
+    
+    @classmethod
+    def from_supplier_part_number(
+        cls,
+        partnum: str,
+        config: ConfigReader,
+        injest_api_automatically=True,
+        prompt=False,
+    ) -> "DigikeyPart":
+        cls._set_environment(config)
+        raw = digikey.product_details(partnum)
+        if injest_api_automatically:
+            part = cls(raw)
+            part.injest_api(prompt=prompt)
+            return part
+        else:
+            return cls(raw)
 
     @staticmethod
     def _set_environment(config):
@@ -78,20 +73,3 @@ class DigiPart:
                 errmsg += "DIGIKEY_STORAGE_PATH "
 
             raise AttributeError(errmsg)
-
-    @classmethod
-    def from_digikey_part_number(
-        cls,
-        partnum: str,
-        config: ConfigReader,
-        injest_api_automatically=True,
-        prompt=False,
-    ) -> "DigiPart":
-        cls._set_environment(config)
-        raw = digikey.product_details(partnum)
-        if injest_api_automatically:
-            part = cls(raw)
-            part.injest_api(prompt)
-            return part
-        else:
-            return cls(raw)
