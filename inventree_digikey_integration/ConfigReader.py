@@ -66,6 +66,7 @@ class ConfigReader:
                     )
                 except:
                     print("Error: Could not connect to Inventree API")  # FIXME
+                    return None
 
                 self._reinit_api = False
                 self._inventree_api = api
