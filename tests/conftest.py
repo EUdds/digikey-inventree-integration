@@ -2,7 +2,7 @@ from pathlib import Path
 from configparser import ConfigParser
 import pytest
 import pickle
-import os
+import json
 
 from inventree_digikey_integration.ConfigReader import ConfigReader
 
@@ -28,6 +28,17 @@ def test_data():
         "size": 11688,
         "size_error": 0.2,  # Add some error margin for different download sizes
     }
+
+    data_dict["test_api_responses"] = {}
+    for file in Path(TEST_DATA_PATH / "supplier_api_responses").glob("*.*"):
+        with open(file, "rb") as f:
+            if file.suffix == ".pkl" or file.suffix == ".pickle":
+                data_dict["test_api_responses"][file.stem] = pickle.load(f)
+            elif file.suffix == ".json":
+                data_dict["test_api_responses"][file.stem] = json.load(f)
+            else:
+                raise ValueError(f"Unknown file type {file.suffix}")
+
 
     return data_dict
 

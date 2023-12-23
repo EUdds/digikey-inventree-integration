@@ -36,7 +36,7 @@ def add_digikey_part(dkpart: DigikeyPart, config: ConfigReader):
         {
             "part": base_pk,
             "supplier": dk.pk,
-            "SKU": dkpart.digi_part_num,
+            "SKU": dkpart.supplier_part_num,
             "manufacturer": mfg.pk,
             "description": dkpart.description,
             "link": dkpart.link,

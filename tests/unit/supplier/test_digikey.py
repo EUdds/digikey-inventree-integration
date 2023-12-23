@@ -22,7 +22,7 @@ def test_part_creation(test_data):
         dkpart.link
         == "https://www.digikey.com/en/products/detail/texas-instruments/NA555DR/1571933"
     )
-    assert dkpart.digi_part_num == "296-21752-2-ND"
+    assert dkpart.supplier_part_num == "296-21752-2-ND"
     assert (
         dkpart.picture
         == "https://mm.digikey.com/Volume0/opasdata/d220001/medias/images/4849/296_8-SOIC.jpg"
@@ -55,7 +55,7 @@ def test_part_creation_from_partnumber(test_data, monkeypatch):
         dkpart.link
         == "https://www.digikey.com/en/products/detail/texas-instruments/NA555DR/1571933"
     )
-    assert dkpart.digi_part_num == "296-21752-2-ND"
+    assert dkpart.supplier_part_num == "296-21752-2-ND"
     assert (
         dkpart.picture
         == "https://mm.digikey.com/Volume0/opasdata/d220001/medias/images/4849/296_8-SOIC.jpg"

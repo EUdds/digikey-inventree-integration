@@ -10,14 +10,19 @@ from inventree_digikey_integration.suppliers.Digikey import DigikeyPart
 
 TEST_DATA_PATH = Path(__file__).resolve().parent
 
-DIGIKEY_PART_NUMBER_UNDER_TEST = "296-21752-2-ND"
+APIS_TO_TEST = [
+    # Name,     Supplier Wrapper,   API Request Function,   Part Number under test
+    ["Digikey", DigikeyPart,        product_details,        "296-21752-2-ND"],
+]
 
-print("Fetching test data from Digikey API")
-resp = product_details(DIGIKEY_PART_NUMBER_UNDER_TEST)
+for APIS_TO_TEST in APIS_TO_TEST:
+    print("Fetching test data from %s API" % APIS_TO_TEST[0])
+    resp = APIS_TO_TEST[2](APIS_TO_TEST[3])
+    dump_path = TEST_DATA_PATH / "supplier_api_responses" / (APIS_TO_TEST[1].__name__ + ".pkl")
+    print("Saving test data to %s" % str(dump_path))
+    with open(dump_path, "wb") as f:
+        pickle.dump(resp, f)
 
-print("Saving test data to %s" % str(Path(TEST_DATA_PATH) / "test_resp.pkl"))
-with open(TEST_DATA_PATH / "test_resp.pkl", "wb") as f:
-    pickle.dump(resp, f)
 
 print("Saving test data to %s" % str(Path(TEST_DATA_PATH) / "test_dkpart.pkl"))
 with open(TEST_DATA_PATH / "test_dkpart.pkl", "wb") as f:

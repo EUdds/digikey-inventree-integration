@@ -7,7 +7,7 @@ class SupplierPartBase:
     def __init__(self, api_resp, injest_api_automatically=True, prompt=False):
         self.raw_value = api_resp
         self.name = None
-        self.digi_part_num = None
+        self.supplier_part_num = None
         self.mfg_part_num = None
         self.manufacturer = None
         self.description = None

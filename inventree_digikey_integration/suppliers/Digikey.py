@@ -18,7 +18,7 @@ class DigikeyPart(SupplierPartBase):
         self.mfg_part_num = self.raw_value.manufacturer_part_number
         self.description = self.raw_value.product_description
         self.link = self.raw_value.product_url
-        self.digi_part_num = self.raw_value.digi_key_part_number
+        self.supplier_part_num = self.raw_value.digi_key_part_number
         self.picture = self.raw_value.primary_photo
         for raw_param in self.raw_value.parameters:
             cleaned_param = (raw_param.parameter, raw_param.value)

@@ -10,12 +10,12 @@ def test_argparse():
     args = test_module.parse_args(["-y", "1234", "5678"])
     assert args.yes == True
     assert args.query_numbers == ["1234", "5678"]
-    assert args.config == SOURCE_ROOT / "config.ini"
+    assert args.config == test_module.DEFAULT_CONFIG_PATH
 
     args = test_module.parse_args(["-y", "1234", "5678"])
     assert args.yes == True
     assert args.query_numbers == ["1234", "5678"]
-    assert args.config == SOURCE_ROOT / "config.ini"
+    assert args.config == test_module.DEFAULT_CONFIG_PATH
 
     args = test_module.parse_args(["-y", "-c", "test_config.ini", "1234", "5678"])
     assert args.yes == True
