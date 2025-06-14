@@ -44,23 +44,28 @@ class ConfigReader:
             )
         if "STORAGE_PATH" in self.config["DIGIKEY_API"]:
             self.digikey_storage_path = self.config["DIGIKEY_API"]["STORAGE_PATH"]
-        self._inventree_url = self.config["INVENTREE_API"]["URL"]
-        self._inventree_username = self.config["INVENTREE_API"]["USER"]
-        self._inventree_password = self.config["INVENTREE_API"]["PASSWORD"]
+        self._inventree_url = self.config.get("INVENTREE_API", "URL", fallback=None)
+        self._inventree_username = self.config.get(
+            "INVENTREE_API", "USER", fallback=None
+        )
+        self._inventree_password = self.config.get(
+            "INVENTREE_API", "PASSWORD", fallback=None
+        )
+        self._inventree_token = self.config.get("INVENTREE_API", "TOKEN", fallback=None)
 
     @property
     def inventree_api(self):
         if (
             self._inventree_api is None or self._reinit_api
         ):  # Allows us to reinit the api if the config changes
-            if (
-                self.inventree_url
-                and self.inventree_username
-                and self.inventree_password
+            if self.inventree_url and (
+                (self.inventree_username and self.inventree_password)
+                or self.inventree_token
             ):
                 try:
                     api = InvenTreeAPI(
                         self.inventree_url,
+                        token=self.inventree_token,
                         username=self.inventree_username,
                         password=self.inventree_password,
                     )
@@ -72,7 +77,7 @@ class ConfigReader:
                 return api
             else:
                 raise AttributeError(
-                    "Cannot init inventree_api without inventree_[url|username|password] set"
+                    "Cannot init inventree_api without inventree_[url|username|password|token] set"
                 )
         else:
             return self._inventree_api
@@ -80,7 +85,7 @@ class ConfigReader:
     @inventree_api.setter
     def inventree_api(self, value):
         raise AttributeError(
-            "Cannot set inventree_api directly. Use inventree_[url|username|password] instead"
+            "Cannot set inventree_api directly. Use inventree_[url|username|password|token] instead"
         )
 
     @property
@@ -94,6 +99,10 @@ class ConfigReader:
     @property
     def inventree_password(self):
         return self._inventree_password
+
+    @property
+    def inventree_token(self):
+        return self._inventree_token
 
     @inventree_url.setter
     def inventree_url(self, value):
@@ -109,3 +118,8 @@ class ConfigReader:
     def inventree_password(self, value):
         self._reinit_api = True
         self._inventree_password = value
+
+    @inventree_token.setter
+    def inventree_token(self, value):
+        self._reinit_api = True
+        self._inventree_token = value
