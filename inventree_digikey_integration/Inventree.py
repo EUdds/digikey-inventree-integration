@@ -21,7 +21,7 @@ def add_digikey_part(dkpart: DigiPart, config: ConfigReader):
     base_pk = int(inv_part.pk)
     mfg = find_manufacturer(dkpart, config)
 
-    ManufacturerPart.create(
+    mfgpart = ManufacturerPart.create(
         config.inventree_api,
         {
             "part": base_pk,
@@ -38,6 +38,7 @@ def add_digikey_part(dkpart: DigiPart, config: ConfigReader):
             "supplier": dk.pk,
             "SKU": dkpart.digi_part_num,
             "manufacturer": mfg.pk,
+            "manufacturer_part": mfgpart.pk,
             "description": dkpart.description,
             "link": dkpart.link,
         },
